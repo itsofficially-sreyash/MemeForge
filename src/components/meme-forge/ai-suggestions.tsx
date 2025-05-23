@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export function AiSuggestions({
         <div className="flex justify-between items-center">
           <div>
             <CardTitle>AI Caption Suggestions</CardTitle>
-            <CardDescription>Let AI help you find the perfect caption.</CardDescription>
+            <CardDescription className="mt-1">Let AI help you find the perfect caption.</CardDescription>
           </div>
           {onGenerateSuggestions && (
              <Button onClick={onGenerateSuggestions} disabled={isLoading || disabled} variant="outline" size="sm">
