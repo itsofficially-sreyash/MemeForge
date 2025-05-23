@@ -6,6 +6,7 @@ import { ImageUploader } from "@/components/meme-forge/image-uploader";
 import { MemeCanvas } from "@/components/meme-forge/meme-canvas";
 import { CaptionControls } from "@/components/meme-forge/caption-controls";
 import { AiSuggestions } from "@/components/meme-forge/ai-suggestions";
+import { MemeLibrary } from "@/components/meme-forge/meme-library"; // Added import
 import { Button } from "@/components/ui/button";
 import { Download, Image as ImageIcon, Sparkles, Menu } from "lucide-react";
 import { suggestMemeCaptions } from "@/ai/flows/suggest-meme-captions";
@@ -13,7 +14,6 @@ import type { Caption } from "@/lib/types";
 import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_OUTLINE_COLOR, DEFAULT_OUTLINE_WIDTH_FACTOR, DEFAULT_TEXT_COLOR } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 
 export default function MemeForgePage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -29,15 +29,19 @@ export default function MemeForgePage() {
 
   const handleImageUpload = useCallback(async (imageDataUrl: string) => {
     setUploadedImage(imageDataUrl);
-    setCaptions([]); // Reset captions on new image
+    setCaptions([]); 
     setSelectedCaptionId(null);
-    setSuggestedCaptions([]); // Clear old suggestions
+    setSuggestedCaptions([]); 
+    // Automatically close sidebar if an image is uploaded/selected from it
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
     await generateSuggestions(imageDataUrl);
-  }, []);
+  }, [isSidebarOpen]); // Added isSidebarOpen to dependencies
 
   const generateSuggestions = async (imageDataUrl: string | null = uploadedImage) => {
     if (!imageDataUrl) {
-      toast({ title: "Error", description: "Please upload an image first.", variant: "destructive" });
+      toast({ title: "Error", description: "Please upload an image or select a template first.", variant: "destructive" });
       return;
     }
     setIsLoadingSuggestions(true);
@@ -61,8 +65,8 @@ export default function MemeForgePage() {
     const newCaption: Caption = {
       id: Date.now().toString(),
       text: "New Caption",
-      x: 0.5, // Center
-      y: captions.length % 2 === 0 ? 0.15 : 0.85, // Alternate top/bottom for new captions
+      x: 0.5, 
+      y: captions.length % 2 === 0 ? 0.15 : 0.85, 
       fontSize: DEFAULT_FONT_SIZE,
       fontFamily: DEFAULT_FONT_FAMILY,
       color: DEFAULT_TEXT_COLOR,
@@ -111,6 +115,10 @@ export default function MemeForgePage() {
       setSelectedCaptionId(newCaption.id);
     }
     toast({ title: "Suggestion Applied!", description: `"${suggestion.substring(0,30)}..." applied.`});
+     // Close sidebar if a suggestion is applied from it
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleDownloadMeme = () => {
@@ -132,12 +140,13 @@ export default function MemeForgePage() {
   const ControlPanel = () => (
     <div className="space-y-6 p-1">
       <ImageUploader onImageUpload={handleImageUpload} disabled={isLoadingSuggestions} />
+      <MemeLibrary onSelectImage={handleImageUpload} disabled={isLoadingSuggestions} />
       <AiSuggestions
         suggestions={suggestedCaptions}
         isLoading={isLoadingSuggestions}
         onApplySuggestion={handleApplySuggestion}
         onGenerateSuggestions={() => generateSuggestions()}
-        disabled={!uploadedImage}
+        disabled={!uploadedImage || isLoadingSuggestions}
       />
       {uploadedImage && (
         <CaptionControls
@@ -179,7 +188,7 @@ export default function MemeForgePage() {
           </div>
           <div className="hidden md:flex items-center gap-2">
             {uploadedImage && (
-              <Button onClick={handleDownloadMeme} variant="default">
+              <Button onClick={handleDownloadMeme} variant="default" disabled={isLoadingSuggestions}>
                 <Download className="mr-2 h-4 w-4" /> Download Meme
               </Button>
             )}
@@ -199,7 +208,7 @@ export default function MemeForgePage() {
                 onSelectCaption={handleSelectCaption}
               />
               {uploadedImage && (
-                <Button onClick={handleDownloadMeme} variant="default" className="mt-4 md:hidden">
+                <Button onClick={handleDownloadMeme} variant="default" className="mt-4 md:hidden" disabled={isLoadingSuggestions}>
                   <Download className="mr-2 h-4 w-4" /> Download Meme
                 </Button>
               )}
@@ -207,7 +216,7 @@ export default function MemeForgePage() {
                  <div className="text-center text-muted-foreground">
                    <ImageIcon className="mx-auto h-12 w-12 mb-2" />
                    <p>Your meme will appear here.</p>
-                   <p className="text-sm">Upload an image to get started!</p>
+                   <p className="text-sm">Upload an image or pick a template to get started!</p>
                  </div>
               )}
           </div>
