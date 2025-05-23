@@ -40,7 +40,7 @@ export function ImageUploader({ onImageUpload, disabled }: ImageUploaderProps) {
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            className="h-12 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
             disabled={disabled}
           />
         </div>
